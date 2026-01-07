@@ -16,20 +16,63 @@ class MarxLoadImage:
     @classmethod
     def INPUT_TYPES(cls):
         input_dir = folder_paths.get_input_directory()
-        files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
+
+        # Get all subfolders in input directory
+        folders = ["input"]  # Root input folder
+        for item in os.listdir(input_dir):
+            item_path = os.path.join(input_dir, item)
+            if os.path.isdir(item_path):
+                folders.append(item)
+
         return {
             "required": {
-                "image": (sorted(files), {"image_upload": True})
+                "folder": (sorted(folders),),
+                "image": ("STRING", {"default": ""}),
             },
         }
+
+    @classmethod
+    def get_images_in_folder(cls, folder):
+        """Helper method to get list of images in the selected folder"""
+        input_dir = folder_paths.get_input_directory()
+
+        if folder == "input":
+            target_dir = input_dir
+        else:
+            target_dir = os.path.join(input_dir, folder)
+
+        if not os.path.exists(target_dir):
+            return []
+
+        # Get all image files
+        valid_extensions = {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.tiff', '.tif'}
+        files = []
+        for f in os.listdir(target_dir):
+            file_path = os.path.join(target_dir, f)
+            if os.path.isfile(file_path):
+                _, ext = os.path.splitext(f)
+                if ext.lower() in valid_extensions:
+                    files.append(f)
+
+        return sorted(files)
 
     RETURN_TYPES = ("IMAGE", "MASK")
     OUTPUT_NODE = False
     FUNCTION = "load_image"
     CATEGORY = "Marx/image"
 
-    def load_image(self, image):
-        image_path = folder_paths.get_annotated_filepath(image)
+    def load_image(self, folder, image):
+        input_dir = folder_paths.get_input_directory()
+
+        # Construct the full image path
+        if folder == "input":
+            image_path = os.path.join(input_dir, image)
+        else:
+            image_path = os.path.join(input_dir, folder, image)
+
+        # Validate path exists
+        if not os.path.exists(image_path):
+            raise FileNotFoundError(f"Image not found: {image_path}")
 
         # Load image
         img = Image.open(image_path)
@@ -71,19 +114,36 @@ class MarxLoadImage:
         return (output_image, output_mask)
 
     @classmethod
-    def IS_CHANGED(cls, image):
-        image_path = folder_paths.get_annotated_filepath(image)
+    def IS_CHANGED(cls, folder, image):
+        input_dir = folder_paths.get_input_directory()
 
-        # Generate hash based on file modification time and size
+        # Construct the full image path
+        if folder == "input":
+            image_path = os.path.join(input_dir, image)
+        else:
+            image_path = os.path.join(input_dir, folder, image)
+
+        if not os.path.exists(image_path):
+            return ""
+
+        # Generate hash based on file content
         m = hashlib.sha256()
         with open(image_path, 'rb') as f:
             m.update(f.read())
         return m.digest().hex()
 
     @classmethod
-    def VALIDATE_INPUTS(cls, image):
-        if not folder_paths.exists_annotated_filepath(image):
-            return "Invalid image file: {}".format(image)
+    def VALIDATE_INPUTS(cls, folder, image):
+        input_dir = folder_paths.get_input_directory()
+
+        # Construct the full image path
+        if folder == "input":
+            image_path = os.path.join(input_dir, image)
+        else:
+            image_path = os.path.join(input_dir, folder, image)
+
+        if not os.path.exists(image_path):
+            return f"Invalid image file: {image} in folder: {folder}"
         return True
 
 
