@@ -1,19 +1,31 @@
 # ComfyUI_Marx
 
-Custom nodes for ComfyUI with configurable folder-based image loading.
+Custom nodes for ComfyUI with configurable folder-based image loading organized by Input and Output
+categories.
 
 ## Nodes
 
-### Marx Load Image 1-5
+### Input Image Loaders (3 nodes)
 
-Five separate image loader nodes, each configured to read from a specific folder defined in ComfyUI
-settings.
+Reads from ComfyUI's **input** directory (`ComfyUI/input/`):
 
-- **Marx Load Image 1** - Reads from folder configured in "Marx Folder 1" setting (default: `e`)
-- **Marx Load Image 2** - Reads from folder configured in "Marx Folder 2" setting (default: `f`)
-- **Marx Load Image 3** - Reads from folder configured in "Marx Folder 3" setting (default: `g`)
-- **Marx Load Image 4** - Reads from folder configured in "Marx Folder 4" setting (default: `h`)
-- **Marx Load Image 5** - Reads from folder configured in "Marx Folder 5" setting (default: `i`)
+- **Load Input Image 1 Marx** - Reads from folder configured in "Marx Folder Input 1" setting (
+  default: `input1`)
+- **Load Input Image 2 Marx** - Reads from folder configured in "Marx Folder Input 2" setting (
+  default: `input2`)
+- **Load Input Image 3 Marx** - Reads from folder configured in "Marx Folder Input 3" setting (
+  default: `input3`)
+
+### Output Image Loaders (3 nodes)
+
+Reads from ComfyUI's **output** directory (`ComfyUI/output/`):
+
+- **Load Output Image 1 Marx** - Reads from folder configured in "Marx Folder Output 1" setting (
+  default: `output1`)
+- **Load Output Image 2 Marx** - Reads from folder configured in "Marx Folder Output 2" setting (
+  default: `output2`)
+- **Load Output Image 3 Marx** - Reads from folder configured in "Marx Folder Output 3" setting (
+  default: `output3`)
 
 **Features:**
 
@@ -53,10 +65,12 @@ settings.
 ### Setting Up Folders
 
 1. Open ComfyUI → Click **Settings** (gear icon)
-2. Scroll to find **Marx Folder 1-5** settings
-3. Enter subfolder paths relative to `ComfyUI/input/` directory
+2. Scroll to find **Marx Folder Input/Output** settings:
+    - **Marx Folder Input 1-3** - Subfolders relative to `ComfyUI/input/`
+    - **Marx Folder Output 1-3** - Subfolders relative to `ComfyUI/output/`
+3. Enter subfolder paths
     - Example: `portraits`, `landscapes`, `textures`, etc.
-    - Use `.` to reference the root input directory
+   - Use `.` to reference the root directory
 4. Click **Save**
 5. Refresh ComfyUI for changes to take effect
 
@@ -64,26 +78,27 @@ settings.
 
 If no settings are configured, the nodes use these default folders:
 
-- Marx Load Image 1 → `ComfyUI/input/e/`
-- Marx Load Image 2 → `ComfyUI/input/f/`
-- Marx Load Image 3 → `ComfyUI/input/g/`
-- Marx Load Image 4 → `ComfyUI/input/h/`
-- Marx Load Image 5 → `ComfyUI/input/i/`
+- Load Input Image 1 Marx → `ComfyUI/input/input1/`
+- Load Input Image 2 Marx → `ComfyUI/input/input2/`
+- Load Input Image 3 Marx → `ComfyUI/input/input3/`
+- Load Output Image 1 Marx → `ComfyUI/output/output1/`
+- Load Output Image 2 Marx → `ComfyUI/output/output2/`
+- Load Output Image 3 Marx → `ComfyUI/output/output3/`
 
 ### Folder Structure Example
 
 ```
-ComfyUI/input/
-  ├── e/                    # Marx Load Image 1
-  │   ├── image1.png
-  │   └── image2.png
-  ├── f/                    # Marx Load Image 2
-  │   ├── photo1.jpg
-  │   └── photo2.jpg
-  ├── portraits/            # Marx Load Image 3 (if configured)
-  │   └── person1.jpg
-  └── landscapes/           # Marx Load Image 4 (if configured)
-      └── scene1.png
+ComfyUI/
+  ├── input/              # Input nodes read from here
+  │   ├── input1/         # Load Input Image 1 Marx
+  │   ├── input2/         # Load Input Image 2 Marx
+  │   ├── input3/         # Load Input Image 3 Marx
+  │   └── portraits/      # Custom folder (configure in settings)
+  └── output/             # Output nodes read from here
+      ├── output1/        # Load Output Image 1 Marx
+      ├── output2/        # Load Output Image 2 Marx
+      ├── output3/        # Load Output Image 3 Marx
+      └── processed/      # Custom folder (configure in settings)
 ```
 
 ## Usage
@@ -91,17 +106,18 @@ ComfyUI/input/
 1. Configure your folder paths in ComfyUI Settings
 2. Create the corresponding folders in `ComfyUI/input/`
 3. Add images to those folders
-4. Add any "Marx Load Image" node to your workflow
+4. Add any Input or Output image loader node to your workflow
 5. Select an image from the dropdown
 6. Connect the IMAGE and/or MASK outputs to other nodes
 
 **Workflow Example:**
 
-- Marx Load Image 1 for base images
-- Marx Load Image 2 for control images
-- Marx Load Image 3 for masks
-- Marx Load Image 4 for references
-- Marx Load Image 5 for additional inputs
+- Load Input Image 1 Marx for base images
+- Load Input Image 2 Marx for control images
+- Load Input Image 3 Marx for masks
+- Load Output Image 1 Marx for generated outputs
+- Load Output Image 2 Marx for processed results
+- Load Output Image 3 Marx for final renders
 
 ## Requirements
 

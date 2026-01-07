@@ -13,13 +13,14 @@ except ImportError:
   from settings import DEFAULT_FOLDERS
 
 
-def create_marx_load_image_class(folder_number):
+def create_marx_load_image_class(folder_type, folder_number):
   """
   Factory function to create MarxLoadImage node classes.
   Each class reads from its configured folder.
 
   Args:
-      folder_number: Integer from 1-5 indicating which folder to read from
+      folder_type: "input" or "output"
+      folder_number: Integer from 1-3 indicating which folder to read from
   """
 
   class MarxLoadImage:
@@ -30,7 +31,11 @@ def create_marx_load_image_class(folder_number):
 
     @classmethod
     def INPUT_TYPES(cls):
-      input_dir = folder_paths.get_input_directory()
+      # Use appropriate directory based on folder type
+      if folder_type == "input":
+        base_dir = folder_paths.get_input_directory()
+      else:  # output
+        base_dir = folder_paths.get_output_directory()
 
       # Get the configured folder path from settings file
       try:
@@ -38,14 +43,14 @@ def create_marx_load_image_class(folder_number):
       except ImportError:
         from settings import get_folder_path_from_settings
 
-      folder_name = get_folder_path_from_settings(folder_number)
+      folder_name = get_folder_path_from_settings(folder_type, folder_number)
 
       # Build the full path to the configured folder
       if folder_name and folder_name != ".":
-        target_dir = os.path.join(input_dir, folder_name)
+        target_dir = os.path.join(base_dir, folder_name)
       else:
-        # If folder is "." or empty, use root input directory
-        target_dir = input_dir
+        # If folder is "." or empty, use root directory
+        target_dir = base_dir
 
       # List files from the target directory
       files = []
@@ -135,32 +140,35 @@ def create_marx_load_image_class(folder_number):
       return True
 
   # Set a unique class name for each node
-  MarxLoadImage.__name__ = f"MarxLoadImage{folder_number}"
+  MarxLoadImage.__name__ = f"MarxLoad{folder_type.capitalize()}Image{folder_number}"
   return MarxLoadImage
 
 
-# Create 5 separate node classes
-MarxLoadImage1 = create_marx_load_image_class(1)
-MarxLoadImage2 = create_marx_load_image_class(2)
-MarxLoadImage3 = create_marx_load_image_class(3)
-MarxLoadImage4 = create_marx_load_image_class(4)
-MarxLoadImage5 = create_marx_load_image_class(5)
+# Create 6 separate node classes (3 input, 3 output)
+MarxLoadInputImage1 = create_marx_load_image_class("input", 1)
+MarxLoadInputImage2 = create_marx_load_image_class("input", 2)
+MarxLoadInputImage3 = create_marx_load_image_class("input", 3)
+MarxLoadOutputImage1 = create_marx_load_image_class("output", 1)
+MarxLoadOutputImage2 = create_marx_load_image_class("output", 2)
+MarxLoadOutputImage3 = create_marx_load_image_class("output", 3)
 
 # Node class mappings
 NODE_CLASS_MAPPINGS = {
-  "MarxLoadImage1": MarxLoadImage1,
-  "MarxLoadImage2": MarxLoadImage2,
-  "MarxLoadImage3": MarxLoadImage3,
-  "MarxLoadImage4": MarxLoadImage4,
-  "MarxLoadImage5": MarxLoadImage5,
+  "MarxLoadInputImage1": MarxLoadInputImage1,
+  "MarxLoadInputImage2": MarxLoadInputImage2,
+  "MarxLoadInputImage3": MarxLoadInputImage3,
+  "MarxLoadOutputImage1": MarxLoadOutputImage1,
+  "MarxLoadOutputImage2": MarxLoadOutputImage2,
+  "MarxLoadOutputImage3": MarxLoadOutputImage3,
 }
 
 # Node display name mappings
 NODE_DISPLAY_NAME_MAPPINGS = {
-  "MarxLoadImage1": "Marx Load Image 1",
-  "MarxLoadImage2": "Marx Load Image 2",
-  "MarxLoadImage3": "Marx Load Image 3",
-  "MarxLoadImage4": "Marx Load Image 4",
-  "MarxLoadImage5": "Marx Load Image 5",
+  "MarxLoadInputImage1": "Load Input Image 1 Marx",
+  "MarxLoadInputImage2": "Load Input Image 2 Marx",
+  "MarxLoadInputImage3": "Load Input Image 3 Marx",
+  "MarxLoadOutputImage1": "Load Output Image 1 Marx",
+  "MarxLoadOutputImage2": "Load Output Image 2 Marx",
+  "MarxLoadOutputImage3": "Load Output Image 3 Marx",
 }
 

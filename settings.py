@@ -7,11 +7,12 @@ import os
 
 # Default folder configuration
 DEFAULT_FOLDERS = {
-  "folder1": "e",
-  "folder2": "f",
-  "folder3": "g",
-  "folder4": "h",
-  "folder5": "i"
+  "input1": "input1",
+  "input2": "input2",
+  "input3": "input3",
+  "output1": "output1",
+  "output2": "output2",
+  "output3": "output3"
 }
 
 
@@ -45,18 +46,19 @@ def get_comfy_settings_path():
   return None
 
 
-def get_folder_path_from_settings(folder_number):
+def get_folder_path_from_settings(folder_type, folder_number):
   """
   Read folder path from ComfyUI's settings JSON file
   Returns the configured path or default if not found
 
   Args:
-    folder_number: Integer from 1-5
+    folder_type: "input" or "output"
+    folder_number: Integer from 1-3
 
   Returns:
     str: The folder path
   """
-  default_key = f"folder{folder_number}"
+  default_key = f"{folder_type}{folder_number}"
   default_value = DEFAULT_FOLDERS.get(default_key, "")
 
   settings_path = get_comfy_settings_path()
@@ -66,7 +68,7 @@ def get_folder_path_from_settings(folder_number):
   try:
     with open(settings_path, 'r') as f:
       settings = json.load(f)
-      setting_key = f"Marx.folder{folder_number}"
+      setting_key = f"Marx.folder{folder_type.capitalize()}{folder_number}"
       value = settings.get(setting_key)
       if value and value.strip():
         return value.strip()
@@ -94,20 +96,13 @@ def get_setting_value(settings_manager, key, default):
 def get_folder_paths(settings_manager=None):
   """
   Get the configured folder paths from settings or use defaults
-  Returns a list of 5 folder paths
+  Returns a list of 6 folder paths (3 input, 3 output)
   """
   folders = []
-  for i in range(1, 6):
-    key = f"Marx.folder{i}"
-    default = DEFAULT_FOLDERS[f"folder{i}"]
-
-    if settings_manager:
-      folder = get_setting_value(settings_manager, key, default)
-    else:
-      folder = default
-
-    folders.append(folder)
-
+  for i in range(1, 4):
+    folders.append(get_folder_path_from_settings("input", i))
+  for i in range(1, 4):
+    folders.append(get_folder_path_from_settings("output", i))
   return folders
 
 
@@ -118,38 +113,45 @@ def register_settings():
   """
   return [
     {
-      "id": "Marx.folder1",
-      "name": "Marx Folder 1",
+      "id": "Marx.folderInput1",
+      "name": "Marx Folder Input 1",
       "type": "text",
-      "defaultValue": DEFAULT_FOLDERS["folder1"],
-      "tooltip": "Subfolder path in ComfyUI/input directory for image selector 1"
+      "defaultValue": DEFAULT_FOLDERS["input1"],
+      "tooltip": "Subfolder path in ComfyUI/input directory for Load Input Image 1"
     },
     {
-      "id": "Marx.folder2",
-      "name": "Marx Folder 2",
+      "id": "Marx.folderInput2",
+      "name": "Marx Folder Input 2",
       "type": "text",
-      "defaultValue": DEFAULT_FOLDERS["folder2"],
-      "tooltip": "Subfolder path in ComfyUI/input directory for image selector 2"
+      "defaultValue": DEFAULT_FOLDERS["input2"],
+      "tooltip": "Subfolder path in ComfyUI/input directory for Load Input Image 2"
     },
     {
-      "id": "Marx.folder3",
-      "name": "Marx Folder 3",
+      "id": "Marx.folderInput3",
+      "name": "Marx Folder Input 3",
       "type": "text",
-      "defaultValue": DEFAULT_FOLDERS["folder3"],
-      "tooltip": "Subfolder path in ComfyUI/input directory for image selector 3"
+      "defaultValue": DEFAULT_FOLDERS["input3"],
+      "tooltip": "Subfolder path in ComfyUI/input directory for Load Input Image 3"
     },
     {
-      "id": "Marx.folder4",
-      "name": "Marx Folder 4",
+      "id": "Marx.folderOutput1",
+      "name": "Marx Folder Output 1",
       "type": "text",
-      "defaultValue": DEFAULT_FOLDERS["folder4"],
-      "tooltip": "Subfolder path in ComfyUI/input directory for image selector 4"
+      "defaultValue": DEFAULT_FOLDERS["output1"],
+      "tooltip": "Subfolder path in ComfyUI/input directory for Load Output Image 1"
     },
     {
-      "id": "Marx.folder5",
-      "name": "Marx Folder 5",
+      "id": "Marx.folderOutput2",
+      "name": "Marx Folder Output 2",
       "type": "text",
-      "defaultValue": DEFAULT_FOLDERS["folder5"],
-      "tooltip": "Subfolder path in ComfyUI/input directory for image selector 5"
+      "defaultValue": DEFAULT_FOLDERS["output2"],
+      "tooltip": "Subfolder path in ComfyUI/input directory for Load Output Image 2"
+    },
+    {
+      "id": "Marx.folderOutput3",
+      "name": "Marx Folder Output 3",
+      "type": "text",
+      "defaultValue": DEFAULT_FOLDERS["output3"],
+      "tooltip": "Subfolder path in ComfyUI/input directory for Load Output Image 3"
     }
   ]
