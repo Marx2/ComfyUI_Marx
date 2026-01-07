@@ -1,0 +1,96 @@
+{
+  "version": "1.0",
+  "nodes": [
+    {
+      "name": "MarxLoadInputImage1",
+      "display_name": "Load Input Image 1 Marx",
+      "description": "Loads images from a configured subfolder in the input directory. Features folder path display and support for nested folders.",
+      "category": "Marx/image",
+      "output": [
+        "IMAGE",
+        "MASK"
+      ],
+      "output_tooltip": [
+        "The loaded image",
+        "The alpha channel mask"
+      ],
+      "image": "docs/images/marx_load_input_image.png"
+    },
+    {
+      "name": "MarxLoadInputImage2",
+      "display_name": "Load Input Image 2 Marx",
+      "description": "Loads images from a configured subfolder in the input directory. Features folder path display and support for nested folders.",
+      "category": "Marx/image",
+      "output": [
+        "IMAGE",
+        "MASK"
+      ],
+      "output_tooltip": [
+        "The loaded image",
+        "The alpha channel mask"
+      ],
+      "image": "docs/images/marx_load_input_image.png"
+    },
+    {
+      "name": "MarxLoadInputImage3",
+      "display_name": "Load Input Image 3 Marx",
+      "description": "Loads images from a configured subfolder in the input directory. Features folder path display and support for nested folders.",
+      "category": "Marx/image",
+      "output": [
+        "IMAGE",
+        "MASK"
+      ],
+      "output_tooltip": [
+        "The loaded image",
+        "The alpha channel mask"
+      ],
+      "image": "docs/images/marx_load_input_image.png"
+    },
+    {
+      "name": "MarxLoadOutputImage1",
+      "display_name": "Load Output Image 1 Marx",
+      "description": "Loads images from a configured subfolder in the output directory. Features inline preview, Previous/Next navigation buttons, and support for nested folders.",
+      "category": "Marx/image",
+      "output": [
+        "IMAGE",
+        "MASK"
+      ],
+      "output_tooltip": [
+        "The loaded image",
+        "The alpha channel mask"
+      ],
+      "image": "docs/images/marx_load_output_image.png"
+    },
+    {
+      "name": "MarxLoadOutputImage2",
+      "display_name": "Load Output Image 2 Marx",
+      "description": "Loads images from a configured subfolder in the output directory. Features inline preview, Previous/Next navigation buttons, and support for nested folders.",
+      "category": "Marx/image",
+      "output": [
+        "IMAGE",
+        "MASK"
+      ],
+      "output_tooltip": [
+        "The loaded image",
+        "The alpha channel mask"
+      ],
+      "image": "docs/images/marx_load_output_image.png"
+    },
+    {
+      "name": "MarxLoadOutputImage3",
+      "display_name": "Load Output Image 3 Marx",
+      "description": "Loads images from a configured subfolder in the output directory. Features inline preview, Previous/Next navigation buttons, and support for nested folders.",
+      "category": "Marx/image",
+      "output": [
+        "IMAGE",
+        "MASK"
+      ],
+      "output_tooltip": [
+        "The loaded image",
+        "The alpha channel mask"
+      ],
+      "image": "docs/images/marx_load_output_image.png"
+    }
+  ]
+}
+

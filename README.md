@@ -3,6 +3,22 @@
 Custom nodes for ComfyUI with configurable folder-based image loading organized by Input and Output
 categories.
 
+## Screenshots
+
+### Input Image Loader
+
+![Load Input Image Marx](docs/images/marx_load_input_image.png)
+
+Loads images from configured subfolders in the input directory. Features folder path display and
+support for nested folders.
+
+### Output Image Loader
+
+![Load Output Image Marx](docs/images/marx_load_output_image.png)
+
+Loads images from configured subfolders in the output directory. Features inline preview,
+Previous/Next navigation buttons, and support for nested folders.
+
 ## Nodes
 
 ### Input Image Loaders (3 nodes)
@@ -27,21 +43,35 @@ Reads from ComfyUI's **output** directory (`ComfyUI/output/`):
 - **Load Output Image 3 Marx** - Reads from folder configured in "Marx Folder Output 3" setting (
   default: `output3`)
 
-**Features:**
+## Features
 
-- **Folder-based Organization**: Each node reads from its own configured subfolder
-- **Folder Path Display**: Each node displays its configured folder path (e.g., "📁 input/e")
-- **Settings Integration**: Folder paths configured via ComfyUI's native settings panel
-- Supports multiple image formats (PNG, JPG, GIF, etc.)
-- Handles animated images (GIFs) by loading all frames
-- Automatically extracts alpha channel as mask
+### 🎯 Key Features
+
+- **📁 Folder-based Organization**: Each node reads from its own configured subfolder
+- **🏷️ Folder Path Display**: Each node displays its configured folder path (e.g., "📁
+  input/portraits")
+- **⚙️ Settings Integration**: Configure folder paths via ComfyUI's native settings panel
+- **🔄 Navigation Buttons**: Output nodes include Previous/Next buttons for easy image browsing
+- **🖼️ Image Preview**: Both input and output nodes support inline image preview
+- **🎨 Image Filtering**: Automatically filters to show only image files (PNG, JPG, GIF, WebP, etc.)
+- **🚫 Hidden Files Excluded**: Skips .DS_Store and other hidden files
+- **📂 Nested Folders**: Full support for subfolders (e.g., `facefusion/background`)
+
+### 🎭 Image Support
+
+- Multiple image formats (PNG, JPG, JPEG, GIF, WebP, BMP, TIFF, AVIF)
+- Animated images (GIFs) - loads all frames
+- Automatic alpha channel extraction as mask
+- EXIF orientation correction
 - Returns both IMAGE and MASK outputs
-- Supports EXIF orientation correction
+
+### 🎛️ Node Interface
 
 **Inputs:**
 
 - `folder_path`: (Read-only display) Shows the configured folder path for this node
 - `image`: Dropdown selector showing images from the node's configured folder
+- `◄ Previous` / `Next ►`: (Output nodes only) Navigation buttons for browsing images
 
 **Outputs:**
 - `IMAGE`: The loaded image as a tensor (batch, height, width, channels)
