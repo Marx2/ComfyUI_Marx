@@ -16,7 +16,13 @@ class MarxLoadImage:
     @classmethod
     def INPUT_TYPES(cls):
         input_dir = folder_paths.get_input_directory()
-        files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
+        # List images from the /input/e subdirectory
+        e_dir = os.path.join(input_dir, "e")
+        if os.path.exists(e_dir) and os.path.isdir(e_dir):
+          files = [os.path.join("e", f) for f in os.listdir(e_dir) if
+                   os.path.isfile(os.path.join(e_dir, f))]
+        else:
+          files = []
         return {
             "required": {
                 "image": (sorted(files), {"image_upload": True})
