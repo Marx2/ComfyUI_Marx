@@ -12,7 +12,7 @@ node via ComfyUI's settings.
 ![Load Input Image Marx](docs/images/marx_load_input_image.png)
 
 Loads images from configured subfolders in the input directory. Features folder path display and
-support for nested folders. You configure folder in ComfyUI settings.
+support for nested folder under input directory. You configure folder in ComfyUI settings.
 
 ### Output Image Loader
 
@@ -20,7 +20,8 @@ support for nested folders. You configure folder in ComfyUI settings.
 
 Loads images from configured subfolders in the output directory. Features inline preview,
 Previous/Next navigation buttons, and support for nested folders. You configure folder in ComfyUI
-settings.
+settings. There are separate Previous/Next buttons, because standard ones does not work properly (
+ComfyUI limitation).
 
 ## Nodes
 
@@ -100,13 +101,5 @@ ComfyUI/
       └── processed/      # Custom folder (configure in settings)
 ```
 
-## Usage
-
-1. Configure your folder paths in ComfyUI Settings
-2. Create the corresponding folders in `ComfyUI/input/`
-3. Add images to those folders
-4. Add any Input or Output image loader node to your workflow
-5. Select an image from the dropdown
-6. Connect the IMAGE and/or MASK outputs to other nodes
 
 
