@@ -58,21 +58,33 @@ def create_marx_load_image_class(folder_type, folder_number):
 
       # List files from the target directory
       files = []
+      # Image file extensions to filter
+      image_extensions = ('.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp',
+                          '.tiff', '.tif', '.avif')
+
       if os.path.exists(target_dir) and os.path.isdir(target_dir):
         try:
           if folder_name and folder_name != ".":
             # Prefix files with folder name for correct path resolution
             files = [os.path.join(folder_name, f) for f in
                      os.listdir(target_dir)
-                     if os.path.isfile(os.path.join(target_dir, f))]
+                     if os.path.isfile(os.path.join(target_dir, f))
+                     and not f.startswith(
+                '.')  # Skip hidden files like .DS_Store
+                     and f.lower().endswith(
+                image_extensions)]  # Only image files
           else:
             # Root directory files - no prefix needed
             files = [f for f in os.listdir(target_dir)
-                     if os.path.isfile(os.path.join(target_dir, f))]
+                     if os.path.isfile(os.path.join(target_dir, f))
+                     and not f.startswith('.')  # Skip hidden files
+                     and f.lower().endswith(
+                image_extensions)]  # Only image files
         except Exception:
           pass
 
-      # For output nodes, use special image_folder parameter for preview support
+      # For output nodes, provide explicit file list with image_folder configuration
+      # This allows navigation while still using output directory
       if folder_type == "output":
         return {
           "required": {
