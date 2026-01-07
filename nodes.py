@@ -6,154 +6,169 @@ import numpy as np
 import torch
 from PIL import Image, ImageOps, ImageSequence
 
+# Try relative import first (for ComfyUI), fallback to absolute (for testing)
+try:
+  from .settings import DEFAULT_FOLDERS
+except ImportError:
+  from settings import DEFAULT_FOLDERS
 
-class MarxLoadImage:
+
+def create_marx_load_image_class(folder_type, folder_number):
+  """
+  Factory function to create MarxLoadImage node classes.
+  Each class reads from its configured folder.
+
+  Args:
+      folder_type: "input" or "output"
+      folder_number: Integer from 1-3 indicating which folder to read from
+  """
+
+  class MarxLoadImage:
     """
-    LoadImage node that replicates the core ComfyUI LoadImage functionality.
+    LoadImage node that loads images from a specific configured folder.
     Loads an image from the input directory and converts it to a tensor.
     """
 
     @classmethod
     def INPUT_TYPES(cls):
-        input_dir = folder_paths.get_input_directory()
+      # Use appropriate directory based on folder type
+      if folder_type == "input":
+        base_dir = folder_paths.get_input_directory()
+      else:  # output
+        base_dir = folder_paths.get_output_directory()
 
-        # Get all subfolders in input directory
-        folders = ["input"]  # Root input folder
-        for item in os.listdir(input_dir):
-            item_path = os.path.join(input_dir, item)
-            if os.path.isdir(item_path):
-                folders.append(item)
+      # Get the configured folder path from settings file
+      try:
+        from .settings import get_folder_path_from_settings
+      except ImportError:
+        from settings import get_folder_path_from_settings
 
-        return {
-            "required": {
-                "folder": (sorted(folders),),
-                "image": ("STRING", {"default": ""}),
-            },
-        }
+      folder_name = get_folder_path_from_settings(folder_type, folder_number)
 
-    @classmethod
-    def get_images_in_folder(cls, folder):
-        """Helper method to get list of images in the selected folder"""
-        input_dir = folder_paths.get_input_directory()
+      # Build the full path to the configured folder
+      if folder_name and folder_name != ".":
+        target_dir = os.path.join(base_dir, folder_name)
+      else:
+        # If folder is "." or empty, use root directory
+        target_dir = base_dir
 
-        if folder == "input":
-            target_dir = input_dir
-        else:
-            target_dir = os.path.join(input_dir, folder)
+      # List files from the target directory
+      files = []
+      if os.path.exists(target_dir) and os.path.isdir(target_dir):
+        try:
+          if folder_name and folder_name != ".":
+            # Prefix files with folder name for correct path resolution
+            files = [os.path.join(folder_name, f) for f in
+                     os.listdir(target_dir)
+                     if os.path.isfile(os.path.join(target_dir, f))]
+          else:
+            # Root directory files - no prefix needed
+            files = [f for f in os.listdir(target_dir)
+                     if os.path.isfile(os.path.join(target_dir, f))]
+        except Exception:
+          pass
 
-        if not os.path.exists(target_dir):
-            return []
-
-        # Get all image files
-        valid_extensions = {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.tiff', '.tif'}
-        files = []
-        for f in os.listdir(target_dir):
-            file_path = os.path.join(target_dir, f)
-            if os.path.isfile(file_path):
-                _, ext = os.path.splitext(f)
-                if ext.lower() in valid_extensions:
-                    files.append(f)
-
-        return sorted(files)
+      return {
+        "required": {
+          "image": (sorted(files) if files else [""], {"image_upload": True})
+        },
+      }
 
     RETURN_TYPES = ("IMAGE", "MASK")
     OUTPUT_NODE = False
     FUNCTION = "load_image"
     CATEGORY = "Marx/image"
 
-    def load_image(self, folder, image):
-        input_dir = folder_paths.get_input_directory()
+    def load_image(self, image):
+      image_path = folder_paths.get_annotated_filepath(image)
 
-        # Construct the full image path
-        if folder == "input":
-            image_path = os.path.join(input_dir, image)
+      # Load image
+      img = Image.open(image_path)
+
+      # Handle animated images (GIFs, etc.)
+      output_images = []
+      output_masks = []
+
+      for i in ImageSequence.Iterator(img):
+        i = ImageOps.exif_transpose(i)
+
+        # Convert to RGB if needed
+        if i.mode == 'I':
+          i = i.point(lambda i: i * (1 / 255))
+        image_array = i.convert("RGB")
+
+        # Convert to numpy array and normalize
+        image_np = np.array(image_array).astype(np.float32) / 255.0
+        image_tensor = torch.from_numpy(image_np)[None,]
+
+        # Handle alpha channel for mask
+        if 'A' in i.getbands():
+          mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
+          mask_tensor = torch.from_numpy(mask)
+          mask_tensor = 1. - mask_tensor
         else:
-            image_path = os.path.join(input_dir, folder, image)
+          mask_tensor = torch.zeros(
+              (image_tensor.shape[1], image_tensor.shape[2]),
+              dtype=torch.float32)
 
-        # Validate path exists
-        if not os.path.exists(image_path):
-            raise FileNotFoundError(f"Image not found: {image_path}")
+        output_images.append(image_tensor)
+        output_masks.append(mask_tensor.unsqueeze(0))
 
-        # Load image
-        img = Image.open(image_path)
+      if len(output_images) > 1:
+        output_image = torch.cat(output_images, dim=0)
+        output_mask = torch.cat(output_masks, dim=0)
+      else:
+        output_image = output_images[0]
+        output_mask = output_masks[0]
 
-        # Handle animated images (GIFs, etc.)
-        output_images = []
-        output_masks = []
-
-        for i in ImageSequence.Iterator(img):
-            i = ImageOps.exif_transpose(i)
-
-            # Convert to RGB if needed
-            if i.mode == 'I':
-                i = i.point(lambda i: i * (1 / 255))
-            image_array = i.convert("RGB")
-
-            # Convert to numpy array and normalize
-            image_np = np.array(image_array).astype(np.float32) / 255.0
-            image_tensor = torch.from_numpy(image_np)[None,]
-
-            # Handle alpha channel for mask
-            if 'A' in i.getbands():
-                mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
-                mask_tensor = torch.from_numpy(mask)
-                mask_tensor = 1. - mask_tensor
-            else:
-                mask_tensor = torch.zeros((image_tensor.shape[1], image_tensor.shape[2]), dtype=torch.float32)
-
-            output_images.append(image_tensor)
-            output_masks.append(mask_tensor.unsqueeze(0))
-
-        if len(output_images) > 1:
-            output_image = torch.cat(output_images, dim=0)
-            output_mask = torch.cat(output_masks, dim=0)
-        else:
-            output_image = output_images[0]
-            output_mask = output_masks[0]
-
-        return (output_image, output_mask)
+      return (output_image, output_mask)
 
     @classmethod
-    def IS_CHANGED(cls, folder, image):
-        input_dir = folder_paths.get_input_directory()
+    def IS_CHANGED(cls, image):
+      image_path = folder_paths.get_annotated_filepath(image)
 
-        # Construct the full image path
-        if folder == "input":
-            image_path = os.path.join(input_dir, image)
-        else:
-            image_path = os.path.join(input_dir, folder, image)
-
-        if not os.path.exists(image_path):
-            return ""
-
-        # Generate hash based on file content
-        m = hashlib.sha256()
-        with open(image_path, 'rb') as f:
-            m.update(f.read())
-        return m.digest().hex()
+      # Generate hash based on file modification time and size
+      m = hashlib.sha256()
+      with open(image_path, 'rb') as f:
+        m.update(f.read())
+      return m.digest().hex()
 
     @classmethod
-    def VALIDATE_INPUTS(cls, folder, image):
-        input_dir = folder_paths.get_input_directory()
+    def VALIDATE_INPUTS(cls, image):
+      if not folder_paths.exists_annotated_filepath(image):
+        return "Invalid image file: {}".format(image)
+      return True
 
-        # Construct the full image path
-        if folder == "input":
-            image_path = os.path.join(input_dir, image)
-        else:
-            image_path = os.path.join(input_dir, folder, image)
+  # Set a unique class name for each node
+  MarxLoadImage.__name__ = f"MarxLoad{folder_type.capitalize()}Image{folder_number}"
+  return MarxLoadImage
 
-        if not os.path.exists(image_path):
-            return f"Invalid image file: {image} in folder: {folder}"
-        return True
 
+# Create 6 separate node classes (3 input, 3 output)
+MarxLoadInputImage1 = create_marx_load_image_class("input", 1)
+MarxLoadInputImage2 = create_marx_load_image_class("input", 2)
+MarxLoadInputImage3 = create_marx_load_image_class("input", 3)
+MarxLoadOutputImage1 = create_marx_load_image_class("output", 1)
+MarxLoadOutputImage2 = create_marx_load_image_class("output", 2)
+MarxLoadOutputImage3 = create_marx_load_image_class("output", 3)
 
 # Node class mappings
 NODE_CLASS_MAPPINGS = {
-    "MarxLoadImage": MarxLoadImage
+  "MarxLoadInputImage1": MarxLoadInputImage1,
+  "MarxLoadInputImage2": MarxLoadInputImage2,
+  "MarxLoadInputImage3": MarxLoadInputImage3,
+  "MarxLoadOutputImage1": MarxLoadOutputImage1,
+  "MarxLoadOutputImage2": MarxLoadOutputImage2,
+  "MarxLoadOutputImage3": MarxLoadOutputImage3,
 }
 
 # Node display name mappings
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "MarxLoadImage": "Marx Load Image"
+  "MarxLoadInputImage1": "Load Input Image 1 Marx",
+  "MarxLoadInputImage2": "Load Input Image 2 Marx",
+  "MarxLoadInputImage3": "Load Input Image 3 Marx",
+  "MarxLoadOutputImage1": "Load Output Image 1 Marx",
+  "MarxLoadOutputImage2": "Load Output Image 2 Marx",
+  "MarxLoadOutputImage3": "Load Output Image 3 Marx",
 }
 
