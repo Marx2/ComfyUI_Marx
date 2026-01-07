@@ -1,0 +1,16 @@
+[project]
+name = "comfyui-marx"
+description = "Custom nodes for ComfyUI with configurable folder-based image loading organized by Input and Output categories"
+version = "1.0.0"
+license = { text = "MIT" }
+readme = "README.md"
+
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/yourusername/ComfyUI_Marx"
+
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
