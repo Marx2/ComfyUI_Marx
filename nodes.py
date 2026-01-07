@@ -29,6 +29,10 @@ def create_marx_load_image_class(folder_type, folder_number):
     Loads an image from the input directory and converts it to a tensor.
     """
 
+    # Store folder type and number as class attributes
+    _folder_type = folder_type
+    _folder_number = folder_number
+
     @classmethod
     def INPUT_TYPES(cls):
       # Use appropriate directory based on folder type
@@ -68,11 +72,22 @@ def create_marx_load_image_class(folder_type, folder_number):
         except Exception:
           pass
 
-      return {
-        "required": {
-          "image": (sorted(files) if files else [""], {"image_upload": True})
-        },
-      }
+      # For output nodes, use special image_folder parameter for preview support
+      if folder_type == "output":
+        return {
+          "required": {
+            "image": (sorted(files) if files else [""], {
+              "image_upload": True,
+              "image_folder": "output"
+            })
+          },
+        }
+      else:
+        return {
+          "required": {
+            "image": (sorted(files) if files else [""], {"image_upload": True})
+          },
+        }
 
     RETURN_TYPES = ("IMAGE", "MASK")
     OUTPUT_NODE = False
@@ -80,7 +95,28 @@ def create_marx_load_image_class(folder_type, folder_number):
     CATEGORY = "Marx/image"
 
     def load_image(self, image):
-      image_path = folder_paths.get_annotated_filepath(image)
+      # Handle path resolution based on folder type
+      if self._folder_type == "output":
+        # For output directory, construct path manually
+        output_dir = folder_paths.get_output_directory()
+
+        # Get the configured folder path
+        try:
+          from .settings import get_folder_path_from_settings
+        except ImportError:
+          from settings import get_folder_path_from_settings
+
+        folder_name = get_folder_path_from_settings(self._folder_type,
+                                                    self._folder_number)
+
+        if folder_name and folder_name != ".":
+          # Image path already includes folder prefix from INPUT_TYPES
+          image_path = os.path.join(output_dir, image)
+        else:
+          image_path = os.path.join(output_dir, image)
+      else:
+        # For input directory, use standard ComfyUI path resolution
+        image_path = folder_paths.get_annotated_filepath(image)
 
       # Load image
       img = Image.open(image_path)
@@ -125,7 +161,28 @@ def create_marx_load_image_class(folder_type, folder_number):
 
     @classmethod
     def IS_CHANGED(cls, image):
-      image_path = folder_paths.get_annotated_filepath(image)
+      # Handle path resolution based on folder type
+      if cls._folder_type == "output":
+        output_dir = folder_paths.get_output_directory()
+
+        try:
+          from .settings import get_folder_path_from_settings
+        except ImportError:
+          from settings import get_folder_path_from_settings
+
+        folder_name = get_folder_path_from_settings(cls._folder_type,
+                                                    cls._folder_number)
+
+        if folder_name and folder_name != ".":
+          image_path = os.path.join(output_dir, image)
+        else:
+          image_path = os.path.join(output_dir, image)
+      else:
+        image_path = folder_paths.get_annotated_filepath(image)
+
+      # Check if file exists (important for output folder)
+      if not os.path.exists(image_path):
+        return ""
 
       # Generate hash based on file modification time and size
       m = hashlib.sha256()
@@ -135,8 +192,29 @@ def create_marx_load_image_class(folder_type, folder_number):
 
     @classmethod
     def VALIDATE_INPUTS(cls, image):
-      if not folder_paths.exists_annotated_filepath(image):
-        return "Invalid image file: {}".format(image)
+      # Handle path resolution based on folder type
+      if cls._folder_type == "output":
+        output_dir = folder_paths.get_output_directory()
+
+        try:
+          from .settings import get_folder_path_from_settings
+        except ImportError:
+          from settings import get_folder_path_from_settings
+
+        folder_name = get_folder_path_from_settings(cls._folder_type,
+                                                    cls._folder_number)
+
+        if folder_name and folder_name != ".":
+          image_path = os.path.join(output_dir, image)
+        else:
+          image_path = os.path.join(output_dir, image)
+
+        if not os.path.exists(image_path):
+          return "Invalid image file: {}".format(image)
+      else:
+        if not folder_paths.exists_annotated_filepath(image):
+          return "Invalid image file: {}".format(image)
+
       return True
 
   # Set a unique class name for each node
