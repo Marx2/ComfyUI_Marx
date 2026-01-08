@@ -1,8 +1,7 @@
-import hashlib
-import os
-
 import folder_paths
+import hashlib
 import numpy as np
+import os
 import torch
 from PIL import Image, ImageOps, ImageSequence
 
@@ -107,6 +106,11 @@ def create_marx_load_image_class(folder_type, folder_number):
     CATEGORY = "Marx/image"
 
     def load_image(self, image):
+      # Strip [output] or [input] suffix that ComfyUI adds
+      import re
+      if image:
+        image = re.sub(r'\s*\[(output|input)\]\s*$', '', image)
+
       # Handle path resolution based on folder type
       if self._folder_type == "output":
         # For output directory, construct path manually
@@ -173,6 +177,11 @@ def create_marx_load_image_class(folder_type, folder_number):
 
     @classmethod
     def IS_CHANGED(cls, image):
+      # Strip [output] or [input] suffix that ComfyUI adds
+      import re
+      if image:
+        image = re.sub(r'\s*\[(output|input)\]\s*$', '', image)
+
       # Handle path resolution based on folder type
       if cls._folder_type == "output":
         output_dir = folder_paths.get_output_directory()
@@ -204,6 +213,11 @@ def create_marx_load_image_class(folder_type, folder_number):
 
     @classmethod
     def VALIDATE_INPUTS(cls, image):
+      # Strip [output] or [input] suffix that ComfyUI adds
+      import re
+      if image:
+        image = re.sub(r'\s*\[(output|input)\]\s*$', '', image)
+
       # Handle path resolution based on folder type
       if cls._folder_type == "output":
         output_dir = folder_paths.get_output_directory()
